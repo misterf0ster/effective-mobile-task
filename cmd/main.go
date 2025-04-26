@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+
+	config.LoadEnv()
 	cfg := config.Config()
 
 	url := cfg.DBaseURL()
@@ -20,14 +22,15 @@ func main() {
 	}
 	defer conn.Close()
 
+	h := handler.CreateUserHandler(conn)
 	g := gin.Default()
 
-	m := g.Group("/users")
 	{
-		m.POST("/", handler.PostUser)
-		m.GET("/", handler.GetUsers)
-		m.PUT("/:id", handler.PutUser)
-		m.DELETE("/:id", handler.DeleteUser)
+		m := g.Group("/users")
+		m.POST("/", h.CreateUser)
+		m.GET("/", h.GetUsers)
+		m.PUT("/:id", h.PutUser)
+		m.DELETE("/:id", h.DeleteUser)
 	}
 
 	port := os.Getenv("PORT")

@@ -1,11 +1,11 @@
 package model
 
 type User struct {
-	ID          uint    `gorm:"primaryKey" json:"id"`
-	Name        string  `json:"name"`
-	Surname     string  `json:"surname"`
-	Patronymic  *string `json:"patronymic,omitempty"`
-	Gender      string  `json:"gender"`
-	Age         int     `json:"age"`
-	Nationality string  `json:"nationality"`
+	ID          int     `json:"id" db:"id"`
+	Name        string  `json:"name" db:"name"`
+	Surname     string  `json:"surname" db:"surname"`
+	Patronymic  *string `json:"patronymic" db:"patronymic"`
+	Age         *int    `json:"age" db:"age"`
+	Gender      *string `json:"gender" db:"gender"`
+	Nationality *string `json:"nationality" db:"nationality"`
 }

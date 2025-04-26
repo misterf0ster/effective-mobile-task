@@ -1,10 +1,11 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS Users (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    surname VARCHAR(255) NOT NULL,
-    patronymic VARCHAR(255),
+    name VARCHAR(100) NOT NULL,
+    surname VARCHAR(100) NOT NULL,
+    patronymic VARCHAR(100),
+    age INTEGER,
     gender VARCHAR(10),
-    age INT,
-    nationality VARCHAR(255)
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    nationality VARCHAR(100),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );

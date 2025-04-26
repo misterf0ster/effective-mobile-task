@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type DbaseCfg struct {
@@ -21,6 +23,13 @@ func EnvLoad(key string) string {
 		log.Fatalf("env variable %s is not set", key)
 	}
 	return value
+}
+
+func LoadEnv() {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
 }
 
 // Собираю конфиг
