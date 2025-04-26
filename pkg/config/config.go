@@ -1,8 +1,8 @@
 package config
 
 import (
+	"effective-mobile-task/pkg/logger"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -20,7 +20,7 @@ type DbaseCfg struct {
 func EnvLoad(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		log.Fatalf("env variable %s is not set", key)
+		logger.Log.Fatalf("env variable %s is not set", key)
 	}
 	return value
 }
@@ -28,7 +28,7 @@ func EnvLoad(key string) string {
 func LoadEnv() {
 	err := godotenv.Load("../.env")
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		logger.Log.Fatalf("Error loading .env file")
 	}
 }
 

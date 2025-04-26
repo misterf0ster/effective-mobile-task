@@ -5,7 +5,7 @@ import (
 	m "effective-mobile-task/internal/model"
 	s "effective-mobile-task/internal/service"
 	psql "effective-mobile-task/internal/storage"
-	"log"
+	"effective-mobile-task/pkg/logger"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,17 +23,17 @@ func CreateUserHandler(db *psql.DB) *UserHandler {
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req m.PersonRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("Debug: Invalid request: %v", err)
+		logger.Log.Printf("Debug: Invalid request: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: name and surname are required"})
 		return
 	}
 
-	log.Printf("Debug: Received POST with name=%s, surname=%s, patronymic=%s", req.Name, req.Surname, req.Patronymic)
+	logger.Log.Printf("Debug: Received POST with name=%s, surname=%s, patronymic=%s", req.Name, req.Surname, req.Patronymic)
 
 	// Данные от 3 API
 	age, gender, nationality, err := s.APIRespData(req.Name)
 	if err != nil {
-		log.Printf("Debug: Failed to enrich data: %v", err)
+		logger.Log.Printf("Debug: Failed to enrich data: %v", err)
 		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to fetch data from external APIs"})
 		return
 	}
@@ -59,12 +59,12 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		person.Name, person.Surname, person.Patronymic, person.Age, person.Gender, person.Nationality,
 	).Scan(&personID)
 	if err != nil {
-		log.Printf("Debug: Failed to save to database: %v", err)
+		logger.Log.Printf("Debug: Failed to save to database: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save to database"})
 		return
 	}
 
-	log.Printf("Info: Saved person with id=%d", personID)
+	logger.Log.Printf("Info: Saved person with id=%d", personID)
 	person.ID = personID
 
 	c.JSON(http.StatusCreated, person)

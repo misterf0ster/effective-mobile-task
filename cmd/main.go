@@ -4,7 +4,7 @@ import (
 	"effective-mobile-task/internal/handler"
 	psql "effective-mobile-task/internal/storage"
 	"effective-mobile-task/pkg/config"
-	"log"
+	"effective-mobile-task/pkg/logger"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -12,13 +12,17 @@ import (
 
 func main() {
 
+	logger.InitLogger()
+
+	logger.Log.Info("Starting the service...")
+
 	config.LoadEnv()
 	cfg := config.Config()
 
 	url := cfg.DBaseURL()
 	conn, err := psql.Open(url)
 	if err != nil {
-		log.Fatalf("Unable to connect to db: %v\n", err)
+		logger.Log.Fatalf("Unable to connect to db: %v\n", err)
 	}
 	defer conn.Close()
 
@@ -35,11 +39,11 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Printf("Port not found")
+		logger.Log.Printf("Port not found")
 	}
 
-	log.Println("Starting server on port", port)
+	logger.Log.Println("Starting server on port", port)
 	if err := g.Run(":" + port); err != nil {
-		log.Fatal("Server startup error: " + err.Error())
+		logger.Log.Fatal("Server startup error: " + err.Error())
 	}
 }

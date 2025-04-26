@@ -2,10 +2,10 @@ package service
 
 import (
 	m "effective-mobile-task/internal/model"
+	"effective-mobile-task/pkg/logger"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 )
@@ -57,24 +57,25 @@ func APIRespData(name string) (*int, *string, *string, error) {
 	for i := 0; i < 3; i++ {
 		result := <-results
 		if result.err != nil {
-			log.Printf("Debug: API error: %v", result.err)
+			logger.Log.Printf("Debug: API error: %v", result.err)
 			continue
 		}
 		if result.data.Age != nil {
-			log.Printf("Info: Fetched age=%d from agify.io", *result.data.Age)
+			logger.Log.Printf("Info: Fetched age=%d from agify.io", *result.data.Age)
 			age = result.data.Age
 		}
 		if result.data.Gender != nil {
-			log.Printf("Info: Fetched gender=%s from genderize.io", *result.data.Gender)
+			logger.Log.Printf("Info: Fetched gender=%s from genderize.io", *result.data.Gender)
 			gender = result.data.Gender
 		}
 		if len(result.data.Country) > 0 {
-			log.Printf("Info: Fetched nationality=%s from nationalize.io", result.data.Country[0].CountryID)
+			logger.Log.Printf("Info: Fetched nationality=%s from nationalize.io", result.data.Country[0].CountryID)
 			nationality = &result.data.Country[0].CountryID
 		}
 	}
 
 	if age == nil && gender == nil && nationality == nil {
+		logger.Log.Errorf("no data fetched from APIs")
 		return nil, nil, nil, fmt.Errorf("no data fetched from APIs")
 	}
 
