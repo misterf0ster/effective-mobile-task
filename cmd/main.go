@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	logger.InitLogger()
+	logger.LoggerInit()
 
 	logger.Log.Info("Starting the service...")
 

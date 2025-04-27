@@ -7,6 +7,7 @@ import (
 	psql "effective-mobile-task/internal/storage"
 	"effective-mobile-task/pkg/logger"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +25,10 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req m.PersonRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Log.Printf("Debug: Invalid request: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: name and surname are required"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"Message": "Invalid input: name and surname are required",
+			"Status":  "Error",
+		})
 		return
 	}
 
@@ -34,7 +38,10 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	age, gender, nationality, err := s.APIRespData(req.Name)
 	if err != nil {
 		logger.Log.Printf("Debug: Failed to enrich data: %v", err)
-		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to fetch data from external APIs"})
+		c.JSON(http.StatusBadGateway, gin.H{
+			"Message": "Failed to fetch data from external APIs",
+			"Status":  "Error",
+		})
 		return
 	}
 
@@ -60,7 +67,10 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	).Scan(&personID)
 	if err != nil {
 		logger.Log.Printf("Debug: Failed to save to database: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save to database"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"Message": "Failed to save to database",
+			"Status":  "Error",
+		})
 		return
 	}
 
@@ -72,18 +82,78 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 // GET
 func (h *UserHandler) GetUsers(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"Status":  "Successfuel",
-		"Message": "pong",
-	})
+	sql := "SELECT id, name, surname, patronymic, age, gender, nationality FROM users"
+
+	rows, err := h.DB.Psql.Query(context.Background(), sql)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"Message": "Database connect fals",
+			"Status":  "Error",
+		})
+	}
+	defer rows.Close()
+
+	var users []m.User
+	for rows.Next() {
+		var u m.User
+		if err := rows.Scan(&u.ID, &u.Name, &u.Surname, &u.Patronymic, &u.Age, &u.Gender, &u.Nationality); err == nil {
+			users = append(users, u)
+		}
+	}
+
+	c.JSON(http.StatusOK, users)
 }
 
 // PUT
 func (h *UserHandler) PutUser(c *gin.Context) {
+	id := c.Param("id")
 
+	sql := "UPDATE id, name, surname, patronymic, age, gender, nationality, updated_at FROM users WHERE id=$1"
+
+	var up m.User
+	if err := c.ShouldBind(&up); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"Message": "Bad request body",
+			"Status":  "Error",
+		})
+	}
+
+	up.UpdatedAt = time.Now()
+
+	_, err := h.DB.Psql.Exec(context.Background(), sql,
+		up.Name, up.Surname, up.Patronymic, up.Age, up.Gender, up.Nationality,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"Message": "Update failed",
+			"Status":  "Error",
+		})
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"Message": "Data was updated",
+		"Status":  "Successfule",
+	})
 }
 
 // DELETE
 func (h *UserHandler) DeleteUser(c *gin.Context) {
+	id := c.Param("id")
 
+	sql := "DELETE FROM users WHERE id=$1 RETURNING id"
+
+	var del_id int
+	err := h.DB.Psql.QueryRow(context.Background(), sql, id).Scan(&del_id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"Message": "User not found",
+			"Status":  "Error",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"Message": "User deleted",
+		"Status":  "Successful",
+	})
 }

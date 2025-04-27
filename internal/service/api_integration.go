@@ -2,10 +2,10 @@ package service
 
 import (
 	m "effective-mobile-task/internal/model"
-	"effective-mobile-task/pkg/logger"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 )
@@ -23,6 +23,7 @@ func APIRespData(name string) (*int, *string, *string, error) {
 
 	results := make(chan apiResult, 3)
 
+	// Функция для выполнения HTTP-запроса
 	fetchAPI := func(url string) {
 		resp, err := http.Get(url)
 		if err != nil {
@@ -45,7 +46,7 @@ func APIRespData(name string) (*int, *string, *string, error) {
 		results <- apiResult{data: data}
 	}
 
-	// Запуск горутин
+	// Запуск параллельных запросов
 	go fetchAPI(agifyURL)
 	go fetchAPI(genderizeURL)
 	go fetchAPI(nationalizeURL)
@@ -57,25 +58,24 @@ func APIRespData(name string) (*int, *string, *string, error) {
 	for i := 0; i < 3; i++ {
 		result := <-results
 		if result.err != nil {
-			logger.Log.Printf("Debug: API error: %v", result.err)
+			log.Printf("Debug: API error: %v", result.err)
 			continue
 		}
 		if result.data.Age != nil {
-			logger.Log.Printf("Info: Fetched age=%d from agify.io", *result.data.Age)
+			log.Printf("Info: Fetched age=%d from agify.io", *result.data.Age)
 			age = result.data.Age
 		}
 		if result.data.Gender != nil {
-			logger.Log.Printf("Info: Fetched gender=%s from genderize.io", *result.data.Gender)
+			log.Printf("Info: Fetched gender=%s from genderize.io", *result.data.Gender)
 			gender = result.data.Gender
 		}
 		if len(result.data.Country) > 0 {
-			logger.Log.Printf("Info: Fetched nationality=%s from nationalize.io", result.data.Country[0].CountryID)
+			log.Printf("Info: Fetched nationality=%s from nationalize.io", result.data.Country[0].CountryID)
 			nationality = &result.data.Country[0].CountryID
 		}
 	}
 
 	if age == nil && gender == nil && nationality == nil {
-		logger.Log.Errorf("no data fetched from APIs")
 		return nil, nil, nil, fmt.Errorf("no data fetched from APIs")
 	}
 
