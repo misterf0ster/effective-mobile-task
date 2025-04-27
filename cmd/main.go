@@ -14,7 +14,7 @@ func main() {
 
 	logger.LoggerInit()
 
-	logger.Log.Info("Starting the service...")
+	logger.LogInfo("Starting the service...")
 
 	config.LoadEnv()
 	cfg := config.Config()
@@ -39,7 +39,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		logger.Log.Printf("Port not found")
+		logger.LogInfo("Port not found")
 	}
 
 	logger.Log.Println("Starting server on port", port)
