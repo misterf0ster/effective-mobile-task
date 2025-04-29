@@ -46,7 +46,7 @@ func APIRespData(name string) (*int, *string, *string, error) {
 		results <- apiResult{data: data}
 	}
 
-	// Запуск параллельных запросов
+	// Запуск горутин запросов
 	go fetchAPI(agifyURL)
 	go fetchAPI(genderizeURL)
 	go fetchAPI(nationalizeURL)
